@@ -1,0 +1,22 @@
+@app.route('/plot')
+def plot():
+    """Generates and displays the histogram."""
+    if df.empty:
+        return "Nav pieejami dati histogrammai. Lūdzu augšupielādējiet CSV."
+    
+    plt.figure(figsize=(8, 6))  # Set the figure size
+    df['MonthlyListeners'].hist(bins=20)  # Create histogram of MonthlyListeners
+    plt.xlabel("Mēneša klausītāji")  # X-axis label
+    plt.ylabel("Mākslinieku skaits")  # Y-axis label
+    plt.title("Spotify Top 500 Izkliede")  # Title of the plot
+    
+    # Save the plot to a BytesIO object (in-memory file)
+    img = io.BytesIO()
+    plt.savefig(img, format='png')  # Save plot to img
+    img.seek(0)  # Reset cursor to the beginning
+    
+    # Encode the image as base64 to send to the template
+    plot_url = base64.b64encode(img.getvalue()).decode()
+    
+    # Return the rendered template with the plot URL
+    return render_template('plot.html', plot_url=plot_url)

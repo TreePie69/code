@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Guessing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Spotify Guessing Game</h1>
+        <p>Who has more monthly listeners?</p>
+
+        <form action="/guess" method="POST">
+            <input type="hidden" name="chosen" value="{{ artist1['Artist'] }}">
+            <input type="hidden" name="other" value="{{ artist2['Artist'] }}">
+            <button type="submit">{{ artist1['Artist'] }}</button>
+        </form>
+
+        <p>VS</p>
+
+        <form action="/guess" method="POST">
+            <input type="hidden" name="chosen" value="{{ artist2['Artist'] }}">
+            <input type="hidden" name="other" value="{{ artist1['Artist'] }}">
+            <button type="submit">{{ artist2['Artist'] }}</button>
+        </form>
+    </div>
+</body>
+</html>

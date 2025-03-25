@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .win {
+            color: green;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .lose {
+            color: red;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if result == 'win' %}
+            <p class="win">🎉 You guessed right! 🎉</p>
+        {% else %}
+            <p class="lose">❌ You guessed wrong! ❌</p>
+        {% endif %}
+
+        <p><strong>{{ chosen }}</strong>: {{ chosen_listener }} monthly listeners</p>
+        <p><strong>{{ other }}</strong>: {{ other_listener }} monthly listeners</p>
+
+        <a href="{{ url_for('index') }}"><button>Play Again</button></a>
+        <a href="{{ url_for('leaderboard') }}"><button>Leaderboard</button></a>
+    </div>
+</body>
+</html>
