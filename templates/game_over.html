@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Over</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1e1e2e;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #282a36;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #ff79c6;
+        }
+
+        p {
+            font-size: 20px;
+            margin: 15px 0;
+        }
+
+        .score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #50fa7b;
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            overflow-x: auto; /* Enable horizontal scrolling */
+            white-space: nowrap; /* Prevent wrapping */
+            max-width: 100%;
+            border-radius: 8px;
+            background: #44475a;
+            padding: 10px;
+        }
+
+        .chart-container img {
+            min-width: 600px; /* Ensure the chart does not shrink too much */
+            max-width: none; /* Prevent scaling issues */
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+            background: #6272a4;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: #ff79c6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Game Over</h1>
+        <p>You got <span class="score">{{ score }}</span> correct in a row!</p>
+
+        {% if plot_url %}
+            <div class="chart-container">
+                <h2>Your Guess History</h2>
+                <img src="data:image/png;base64,{{ plot_url }}" alt="Guess Progression">
+            </div>
+        {% else %}
+            <p>No data available for the chart.</p>
+        {% endif %}
+
+        <a href="/" class="btn">Play Again</a>
+    </div>
+
+</body>
+</html>
