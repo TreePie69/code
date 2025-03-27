@@ -14,7 +14,7 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 1200px;  /* Increased container width */
             margin: 50px auto;
             background: #282a36;
             padding: 30px;
@@ -40,17 +40,18 @@
 
         .chart-container {
             margin-top: 20px;
-            overflow-x: auto; /* Enable horizontal scrolling */
-            white-space: nowrap; /* Prevent wrapping */
-            max-width: 100%;
-            border-radius: 8px;
+            overflow-x: auto;  /* Enables horizontal scrolling */
+            white-space: nowrap;  /* Prevents wrapping */
+            width: 100%;
             background: #44475a;
             padding: 10px;
+            border-radius: 8px;
         }
 
         .chart-container img {
-            min-width: 600px; /* Ensure the chart does not shrink too much */
-            max-width: none; /* Prevent scaling issues */
+            min-width: 1400px;  /* Increased minimum width */
+            max-width: 100%;    /* Prevents it from shrinking too much */
+            width: auto;        /* Allows the chart to scale */
             border-radius: 8px;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
         }
