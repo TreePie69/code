@@ -5,6 +5,7 @@ import os
 import matplotlib.pyplot as plt
 import io
 import base64
+import plotly.graph_objects as go
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for session management
@@ -63,64 +64,103 @@ def guess():
     session.setdefault('guessed_others', [])
     session.setdefault('guess_numbers', [])
     session.setdefault('guessed_artists', [])
-    
+    session.setdefault('correct_guesses', 0)
+
     session['guessed_listeners'].append(chosen_listener)
     session['guessed_others'].append(other_listener)
     session['guess_numbers'].append(len(session['guessed_listeners']))
     session['guessed_artists'].append((chosen, other))
 
     if chosen_listener > other_listener:
-        session['correct_guesses'] = session.get('correct_guesses', 0) + 1  
+        session['correct_guesses'] += 1
         new_artists = get_random_artists()
         return render_template('index.html', artist1=new_artists[0], artist2=new_artists[1], score=session['correct_guesses'])
-    
+
     # Game over - Generate the chart
     score = session.get('correct_guesses', 0)
     guessed_listeners = session.get('guessed_listeners', [])
     guessed_others = session.get('guessed_others', [])
     guessed_artists = session.get('guessed_artists', [])
-    
+
     plot_url = None
     if guessed_listeners:
-        fig, ax = plt.subplots(figsize=(max(10, len(guessed_listeners) * 1.5), 6))  # Dynamic width for clarity
-        bar_width = 0.4  
+        guess_labels = [f"Guess {i}" for i in range(1, len(guessed_listeners) + 1)]
+        
+        # Set dynamic width based on number of guesses
+        graph_width = max(1200, len(guessed_listeners) * 150)
 
-        x = range(1, len(guessed_listeners) + 1)
-        ax.bar([pos - bar_width / 2 for pos in x], guessed_listeners, width=bar_width, color='blue', alpha=0.7, label="Chosen Artist")
-        ax.bar([pos + bar_width / 2 for pos in x], guessed_others, width=bar_width, color='red', alpha=0.7, label="Other Artist")
+        # Create the plotly figure
+        fig = go.Figure()
 
-        ax.set_xlabel("Guess Number")
-        ax.set_ylabel("Monthly Listeners")
-        ax.set_title("Your Guess Progression (Chosen vs. Other)")
-        ax.set_xticks(x)
-        ax.legend()
+        # Chosen artist bars (Green)
+        fig.add_trace(go.Bar(
+            x=guess_labels,
+            y=guessed_listeners,
+            name="Chosen Artist",
+            marker=dict(color='#50fa7b'),
+            text=[artist for (artist, _) in guessed_artists],  # Artist name inside bar
+            textposition='inside',
+            textangle=-90,  # Rotate artist name left
+            insidetextfont=dict(size=18, color="black"),  
+            hoverinfo="y+name",
+        ))
 
-        # Annotate the bars with listener numbers and artist names
+        # Other artist bars (Pink)
+        fig.add_trace(go.Bar(
+            x=guess_labels,
+            y=guessed_others,
+            name="Other Artist",
+            marker=dict(color='#ff79c6'),
+            text=[artist for (_, artist) in guessed_artists],  # Artist name inside bar
+            textposition='inside',
+            textangle=-90,  # Rotate artist name left
+            insidetextfont=dict(size=18, color="black"),  
+            hoverinfo="y+name",
+        ))
+
+        # Display listener numbers separately, centered over their respective bars
         for i in range(len(guessed_listeners)):
-            chosen_artist, other_artist = guessed_artists[i]
-            ax.text(x[i] - bar_width / 2, guessed_listeners[i] + 50000, f"{guessed_listeners[i]:,}", 
-                    ha='center', fontsize=10, fontweight='bold', color='black')
-            ax.text(x[i] + bar_width / 2, guessed_others[i] + 50000, f"{guessed_others[i]:,}", 
-                    ha='center', fontsize=10, fontweight='bold', color='black')
-            ax.text(x[i] - bar_width / 2, guessed_listeners[i] / 2, chosen_artist, 
-                    ha='center', fontsize=10, color='white', fontweight='bold', verticalalignment='center')
-            ax.text(x[i] + bar_width / 2, guessed_others[i] / 2, other_artist, 
-                    ha='center', fontsize=10, color='white', fontweight='bold', verticalalignment='center')
+            fig.add_annotation(
+                x=guess_labels[i], 
+                y=guessed_listeners[i] + max(guessed_listeners) * 0.05,  
+                text=f"{guessed_listeners[i]:,}",
+                showarrow=False,
+                font=dict(size=20, color='white', family="Arial"),
+                yanchor='bottom',
+                xshift=-40  # Shift left to center above the chosen artist bar
+            )
+            fig.add_annotation(
+                x=guess_labels[i], 
+                y=guessed_others[i] + max(guessed_others) * 0.05,  
+                text=f"{guessed_others[i]:,}",
+                showarrow=False,
+                font=dict(size=20, color='white', family="Arial"),
+                yanchor='bottom',
+                xshift=40  # Shift right to center above the other artist bar
+            )
 
-        plt.tight_layout()
+        # Update layout to match dark theme and expand width
+        fig.update_layout(
+            title="Your Guess Progression (Chosen vs. Other)",
+            xaxis_title="Guess Number",
+            yaxis_title="Monthly Listeners",
+            plot_bgcolor='#282a36',
+            paper_bgcolor='#282a36',
+            font=dict(color='white'),
+            barmode='group',
+            width=graph_width,  # Dynamically adjust width
+            height=650,  # Fixed height
+            margin=dict(l=50, r=50, t=60, b=80),
+            legend=dict(title="Artist", tracegroupgap=0),
+        )
 
+        # Save the plot as a PNG image
         img = io.BytesIO()
-        plt.savefig(img, format='png', bbox_inches="tight")
+        fig.write_image(img, format='png')
         img.seek(0)
         plot_url = base64.b64encode(img.getvalue()).decode()
-        plt.close()
 
-    # Reset session data for a new game
-    session['correct_guesses'] = 0
-    session['guessed_listeners'] = []
-    session['guessed_others'] = []
-    session['guess_numbers'] = []
-    session['guessed_artists'] = []
+    session.clear()  # Clear the session for a new game
 
     return render_template('game_over.html', score=score, plot_url=plot_url)
 
