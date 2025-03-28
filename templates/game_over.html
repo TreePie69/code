@@ -1,35 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ settings['language'] }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Over</title>
+    <title>Game Over - Spotify Guessing Game</title>
     <style>
+        /* Background Animation */
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Dark Mode Variables (Default) */
+        :root {
+            --primary-bg: #121212;
+            --secondary-bg: #1e1e1e;
+            --text-color: white;
+            --menu-bg: #222;
+            --gradient-1: {{ '#004a80' if settings['gradient'] == 'blue' else '#d32f2f' if settings['gradient'] == 'red' else '#2c0735' }};
+            --gradient-2: {{ '#006bb3' if settings['gradient'] == 'blue' else '#9a1b1b' if settings['gradient'] == 'red' else '#6a0dad' }};
+            --gradient-3: {{ '#003d73' if settings['gradient'] == 'blue' else '#c2185b' if settings['gradient'] == 'red' else '#9b30a8' }};
+        }
+
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #1e1e2e;
-            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(270deg, var(--gradient-1), var(--gradient-2), var(--gradient-3));
+            background-size: 400% 400%;
+            animation: gradientAnimation 8s ease infinite;
+            color: var(--text-color);
             text-align: center;
-            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
         }
 
         .container {
-            max-width: 1200px;  /* Increased container width */
-            margin: 50px auto;
-            background: #282a36;
-            padding: 30px;
+            background: var(--secondary-bg);
+            padding: 50px;
+            max-width: 800px;
+            width: 90%;
             border-radius: 12px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            transition: background 0.5s ease;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         h1 {
             font-size: 36px;
             color: #ff79c6;
-        }
-
-        p {
-            font-size: 20px;
-            margin: 15px 0;
         }
 
         .score {
@@ -40,8 +61,8 @@
 
         .chart-container {
             margin-top: 20px;
-            overflow-x: auto;  /* Enables horizontal scrolling */
-            white-space: nowrap;  /* Prevents wrapping */
+            overflow-x: auto;
+            white-space: nowrap;
             width: 100%;
             background: #44475a;
             padding: 10px;
@@ -49,9 +70,9 @@
         }
 
         .chart-container img {
-            min-width: 1400px;  /* Increased minimum width */
-            max-width: 100%;    /* Prevents it from shrinking too much */
-            width: auto;        /* Allows the chart to scale */
+            min-width: 1400px;
+            max-width: 100%;
+            width: auto;
             border-radius: 8px;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
         }
@@ -74,11 +95,78 @@
         .btn:hover {
             background: #ff79c6;
         }
+
+        /* Settings Button (Fixed in Bottom-Right Corner) */
+        #settings-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(90deg, #ff6b81, #ff4757);
+            border: none;
+            color: white;
+            font-size: 22px;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: background 0.3s ease, transform 0.2s;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #settings-btn:hover {
+            background: linear-gradient(90deg, #ff4757, #ff6b81);
+            transform: scale(1.1);
+        }
+
+        /* Settings Menu */
+        #settings-menu {
+            position: fixed;
+            bottom: -300px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            background: var(--menu-bg);
+            color: var(--text-color);
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.2);
+            transition: bottom 0.3s ease-in-out;
+        }
+
+        #settings-menu.open {
+            bottom: 0;
+        }
+
+        .settings-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .gradient-selector {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .gradient-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Hide page content until settings are applied */
+        .hidden {
+            visibility: hidden;
+        }
+
     </style>
 </head>
-<body>
+<body onload="applySettings()">
 
-    <div class="container">
+    <div class="container hidden" id="game-over-container">
         <h1>Game Over</h1>
         <p>You got <span class="score">{{ score }}</span> correct in a row!</p>
 
@@ -93,6 +181,45 @@
 
         <a href="/" class="btn">Play Again</a>
     </div>
+
+    <!-- Settings Button -->
+    <button id="settings-btn" onclick="toggleSettings()">⚙️</button>
+
+    <!-- Settings Menu -->
+    <div id="settings-menu">
+        <h2>Settings</h2>
+
+        <div class="settings-option">
+            <label>Gradient</label>
+            <div class="gradient-selector">
+                <button class="gradient-btn" style="background: linear-gradient(90deg, #2c0735, #9b30a8);" onclick="updateSetting('/set_gradient/purple')"></button>
+                <button class="gradient-btn" style="background: linear-gradient(90deg, #d32f2f, #9a1b1b);" onclick="updateSetting('/set_gradient/red')"></button>
+                <button class="gradient-btn" style="background: linear-gradient(90deg, #004a80, #006bb3);" onclick="updateSetting('/set_gradient/blue')"></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSettings() { 
+            document.getElementById('settings-menu').classList.toggle('open');
+        }
+
+        function updateSetting(url) {
+            fetch(url)
+            .then(response => {
+                if (response.ok) {
+                    // Gradients directly tied to root variables, so reload is needed
+                    if (url.includes('set_gradient')) {
+                        location.reload();
+                    }
+                }
+            });
+        }
+
+        function applySettings() {
+            document.getElementById('game-over-container').classList.remove('hidden');
+        }
+    </script>
 
 </body>
 </html>

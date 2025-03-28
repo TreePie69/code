@@ -39,19 +39,115 @@ def get_random_artists():
                 {"Artist": "Please Upload CSV", "MonthlyListeners": 0}]
     return df.sample(2).to_dict(orient='records')
 
+
+# Home route to display the game
 @app.route('/')
 def index():
-    session.clear()
-    artists = get_random_artists()
-    return render_template('index.html', artist1=artists[0], artist2=artists[1])
+    # Ensure settings are always initialized
+    settings = {
+        'gradient': session.get('gradient', 'purple')
+    }
+
+    # Only fetch new artists if they are not in session
+    if 'artist1' not in session or 'artist2' not in session:
+        artists = get_random_artists()
+        session['artist1'] = artists[0]
+        session['artist2'] = artists[1]
+
+    return render_template('index.html', artist1=session['artist1'], artist2=session['artist2'], settings=settings)
+
+@app.route('/game_over')
+def game_over():
+    # Get the score from the session or set it to 0 if it's not present
+    score = session.get('correct_guesses', 0)
+
+    # Initialize plot_url to None in case there is no plot
+    plot_url = None
+
+    # Retrieve guesses from the session
+    guessed_listeners = session.get('guessed_listeners', [])
+    guessed_others = session.get('guessed_others', [])
+    guessed_artists = session.get('guessed_artists', [])
+
+    if guessed_listeners:
+        # Prepare data for the plot
+        data = pd.DataFrame({
+            'Guess': [f"Guess {i+1}" for i in range(len(guessed_listeners))] * 2,
+            'Monthly Listeners': guessed_listeners + guessed_others,
+            'Artist': [artist for artist, _ in guessed_artists] + [other for _, other in guessed_artists],
+            'Category': ['Chosen Artist'] * len(guessed_listeners) + ['Other Artist'] * len(guessed_others)
+        })
+
+        # Create the plot
+        sns.set_theme(style="darkgrid", rc={"axes.facecolor": "#282a36", "grid.color": "#44475a"})
+        plt.figure(figsize=(12, 6))
+        ax = sns.barplot(
+            x="Guess",
+            y="Monthly Listeners",
+            hue="Category",
+            data=data,
+            palette={"Chosen Artist": "#50fa7b", "Other Artist": "#ff79c6"}
+        )
+
+        # Add text inside bars (artist names) & on top (listener counts)
+        for bar, artist, value in zip(ax.patches, data["Artist"], data["Monthly Listeners"]):
+            height = bar.get_height()
+
+            # Artist name inside the bar
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                height - (height * 0.08),  # Slightly lower inside the bar
+                artist,
+                ha='center',
+                va='top',
+                fontsize=10,
+                color='black' if height > 5_000_000 else 'white'  # Adjust text color for contrast
+            )
+
+            # Listener count closer to bar top
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                height + (height * 0.007),  # Moves number slightly down for better alignment
+                f"{value:,}",
+                ha='center',
+                va='bottom',
+                fontsize=11,
+                color='white'
+            )
+
+        # Styling
+        plt.xticks(rotation=45, color="white")
+        plt.yticks(color="white")
+        plt.xlabel("Guess Number", color="white")
+        plt.ylabel("Monthly Listeners", color="white")
+        plt.title("Game Progression", color="white")
+        plt.legend(title="Artist", labelcolor="white", facecolor="#282a36")
+
+        # Convert plot to base64
+        img = io.BytesIO()
+        plt.savefig(img, format='png', bbox_inches="tight", facecolor="#282a36")
+        img.seek(0)
+        plot_url = base64.b64encode(img.getvalue()).decode()
+
+    # Do not clear session data yet
+    settings = {
+        'gradient': session.get('gradient', 'purple')
+    }
+
+    return render_template('game_over.html', score=score, plot_url=plot_url, settings=settings)
 
 @app.route('/guess', methods=['POST'])
 def guess():
     chosen = request.form['chosen']
     other = request.form['other']
 
+    # Ensure settings are always initialized
+    settings = {
+        'gradient': session.get('gradient', 'purple')
+    }
+
     if df.empty or chosen not in df['Artist'].values or other not in df['Artist'].values:
-        return render_template('result.html', result='error', chosen=chosen, other=other, chosen_listener=0, other_listener=0)
+        return render_template('result.html', result='error', chosen=chosen, other=other, chosen_listener=0, other_listener=0, settings=settings)
 
     chosen_listener = int(df.loc[df['Artist'] == chosen, 'MonthlyListeners'].values[0])
     other_listener = int(df.loc[df['Artist'] == other, 'MonthlyListeners'].values[0])
@@ -68,7 +164,7 @@ def guess():
     if chosen_listener > other_listener:
         session['correct_guesses'] += 1
         new_artists = get_random_artists()
-        return render_template('index.html', artist1=new_artists[0], artist2=new_artists[1], score=session['correct_guesses'])
+        return render_template('index.html', artist1=new_artists[0], artist2=new_artists[1], score=session['correct_guesses'], settings=settings)
 
     # Game over - Generate Seaborn chart
     score = session.get('correct_guesses', 0)
@@ -141,7 +237,7 @@ def guess():
 
     session.clear()
 
-    return render_template('game_over.html', score=score, plot_url=plot_url)
+    return render_template('game_over.html', score=score, plot_url=plot_url, settings=settings)
 
 if __name__ == '__main__':
     app.run(debug=True)
