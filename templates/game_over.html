@@ -192,9 +192,9 @@
         <div class="settings-option">
             <label>Gradient</label>
             <div class="gradient-selector">
-                <button class="gradient-btn" style="background: linear-gradient(90deg, #2c0735, #9b30a8);" onclick="updateSetting('/set_gradient/purple')"></button>
-                <button class="gradient-btn" style="background: linear-gradient(90deg, #d32f2f, #9a1b1b);" onclick="updateSetting('/set_gradient/red')"></button>
-                <button class="gradient-btn" style="background: linear-gradient(90deg, #004a80, #006bb3);" onclick="updateSetting('/set_gradient/blue')"></button>
+                <button class="gradient-btn" style="background: linear-gradient(90deg, #2c0735, #9b30a8);" onclick="updateSetting('purple')"></button>
+                <button class="gradient-btn" style="background: linear-gradient(90deg, #d32f2f, #9a1b1b);" onclick="updateSetting('red')"></button>
+                <button class="gradient-btn" style="background: linear-gradient(90deg, #004a80, #006bb3);" onclick="updateSetting('blue')"></button>
             </div>
         </div>
     </div>
@@ -204,16 +204,19 @@
             document.getElementById('settings-menu').classList.toggle('open');
         }
 
-        function updateSetting(url) {
-            fetch(url)
-            .then(response => {
-                if (response.ok) {
-                    // Gradients directly tied to root variables, so reload is needed
-                    if (url.includes('set_gradient')) {
-                        location.reload();
-                    }
-                }
-            });
+        function updateSetting(gradient) {
+            let gradientColors = {
+                purple: ['#2c0735', '#6a0dad', '#9b30a8'],
+                red: ['#d32f2f', '#9a1b1b', '#c2185b'],
+                blue: ['#004a80', '#006bb3', '#003d73']
+            };
+
+            let [gradient1, gradient2, gradient3] = gradientColors[gradient];
+
+            // Update the CSS variables dynamically
+            document.documentElement.style.setProperty('--gradient-1', gradient1);
+            document.documentElement.style.setProperty('--gradient-2', gradient2);
+            document.documentElement.style.setProperty('--gradient-3', gradient3);
         }
 
         function applySettings() {
