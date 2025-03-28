@@ -1,26 +1,36 @@
 <!DOCTYPE html>
-<html lang="{{ settings['language'] }}">
+<html lang="{{ settings.get('language', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify Guessing Game</title>
     <style>
-        /* Background Animation */
         @keyframes gradientAnimation {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* Dark Mode Variables */
         :root {
             --primary-bg: #121212;
             --secondary-bg: #1e1e1e;
             --text-color: white;
             --menu-bg: #222;
-            --gradient-1: #004a80;
-            --gradient-2: #006bb3;
-            --gradient-3: #003d73;
+
+            {% set g = settings['gradient'] %}
+            {% if g == 'blue' %}
+                --gradient-1: #004a80;
+                --gradient-2: #006bb3;
+                --gradient-3: #003d73;
+            {% elif g == 'red' %}
+                --gradient-1: #d32f2f;
+                --gradient-2: #9a1b1b;
+                --gradient-3: #c2185b;
+            {% else %}
+                --gradient-1: #2c0735;
+                --gradient-2: #6a0dad;
+                --gradient-3: #9b30a8;
+            {% endif %}
         }
 
         body {
@@ -35,7 +45,6 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            transition: background 0.5s ease, color 0.5s ease;
         }
 
         .container {
@@ -44,7 +53,6 @@
             max-width: 800px;
             width: 90%;
             border-radius: 12px;
-            transition: background 0.5s ease;
             box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
         }
 
@@ -78,15 +86,18 @@
         .or {
             font-size: 24px;
             font-weight: bold;
-            color: var(--text-color);
         }
 
         p {
             font-size: 18px;
-            color: var(--text-color);
         }
 
-        /* Settings Button */
+        h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: #ff79c6;
+        }
+
         #settings-btn {
             position: fixed;
             bottom: 20px;
@@ -107,7 +118,6 @@
             transform: scale(1.1);
         }
 
-        /* Settings Menu */
         #settings-menu {
             position: fixed;
             bottom: -300px;
@@ -146,7 +156,6 @@
             border-radius: 50%;
             cursor: pointer;
         }
-
     </style>
 </head>
 <body>
@@ -174,54 +183,42 @@
         <p>Score: {{ session.get('correct_guesses', 0) }}</p>
     </div>
 
-    <!-- Settings Button -->
     <button id="settings-btn" onclick="toggleSettings()">⚙️</button>
 
-    <!-- Settings Menu -->
     <div id="settings-menu">
         <h2>Settings</h2>
-
         <div class="settings-option">
             <label>Gradient</label>
             <div class="gradient-selector">
-                <button class="gradient-btn" style="background: linear-gradient(90deg, #2c0735, #9b30a8);" onclick="updateGradient('purple')"></button>
-                <button class="gradient-btn" style="background: linear-gradient(90deg, #d32f2f, #9a1b1b);" onclick="updateGradient('red')"></button>
-                <button class="gradient-btn" style="background: linear-gradient(90deg, #004a80, #006bb3);" onclick="updateGradient('blue')"></button>
+                <button class="gradient-btn" style="background: linear-gradient(90deg, #2c0735, #9b30a8);" onclick="setGradient('purple')"></button>
+                <button class="gradient-btn" style="background: linear-gradient(90deg, #d32f2f, #9a1b1b);" onclick="setGradient('red')"></button>
+                <button class="gradient-btn" style="background: linear-gradient(90deg, #004a80, #006bb3);" onclick="setGradient('blue')"></button>
             </div>
         </div>
     </div>
 
     <script>
-        window.onload = function() {
-            // Apply saved gradient settings
-            const savedGradient = localStorage.getItem('gradient');
-            if (savedGradient) {
-                updateGradient(savedGradient);  // Update gradient based on stored preference
-            }
-        };
+        function toggleSettings() {
+            document.getElementById('settings-menu').classList.toggle('open');
+        }
 
-        // Function to update gradient in localStorage and apply it
-        function updateGradient(gradient) {
-            const gradientSettings = {
+        function setGradient(gradient) {
+            const gradients = {
                 purple: ['#2c0735', '#6a0dad', '#9b30a8'],
                 red: ['#d32f2f', '#9a1b1b', '#c2185b'],
                 blue: ['#004a80', '#006bb3', '#003d73']
             };
-            const selectedGradient = gradientSettings[gradient];
-            
-            if (selectedGradient) {
-                document.documentElement.style.setProperty('--gradient-1', selectedGradient[0]);
-                document.documentElement.style.setProperty('--gradient-2', selectedGradient[1]);
-                document.documentElement.style.setProperty('--gradient-3', selectedGradient[2]);
-                localStorage.setItem('gradient', gradient);
-            }
+            const g = gradients[gradient];
+            document.documentElement.style.setProperty('--gradient-1', g[0]);
+            document.documentElement.style.setProperty('--gradient-2', g[1]);
+            document.documentElement.style.setProperty('--gradient-3', g[2]);
+            localStorage.setItem('gradient', gradient);
         }
 
-        // Toggle Settings Menu
-        function toggleSettings() {
-            const menu = document.getElementById('settings-menu');
-            menu.classList.toggle('open');
-        }
+        window.onload = function() {
+            const saved = localStorage.getItem('gradient');
+            if (saved) setGradient(saved);
+        };
     </script>
 </body>
 </html>

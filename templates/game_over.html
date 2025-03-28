@@ -1,26 +1,36 @@
 <!DOCTYPE html>
-<html lang="{{ settings['language'] }}">
+<html lang="{{ settings.get('language', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Over - Spotify Guessing Game</title>
     <style>
-        /* Background Animation */
         @keyframes gradientAnimation {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* Dark Mode Variables (Default) */
         :root {
             --primary-bg: #121212;
             --secondary-bg: #1e1e1e;
             --text-color: white;
             --menu-bg: #222;
-            --gradient-1: {{ '#004a80' if settings['gradient'] == 'blue' else '#d32f2f' if settings['gradient'] == 'red' else '#2c0735' }};
-            --gradient-2: {{ '#006bb3' if settings['gradient'] == 'blue' else '#9a1b1b' if settings['gradient'] == 'red' else '#6a0dad' }};
-            --gradient-3: {{ '#003d73' if settings['gradient'] == 'blue' else '#c2185b' if settings['gradient'] == 'red' else '#9b30a8' }};
+
+            {% set g = settings['gradient'] %}
+            {% if g == 'blue' %}
+                --gradient-1: #004a80;
+                --gradient-2: #006bb3;
+                --gradient-3: #003d73;
+            {% elif g == 'red' %}
+                --gradient-1: #d32f2f;
+                --gradient-2: #9a1b1b;
+                --gradient-3: #c2185b;
+            {% else %}
+                --gradient-1: #2c0735;
+                --gradient-2: #6a0dad;
+                --gradient-3: #9b30a8;
+            {% endif %}
         }
 
         body {
@@ -35,58 +45,54 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            transition: background 0.5s ease, color 0.5s ease;
         }
 
         .container {
             background: var(--secondary-bg);
-            padding: 50px;
-            max-width: 800px;
-            width: 90%;
-            border-radius: 12px;
-            transition: background 0.5s ease;
-            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            padding: 60px;
+            max-width: 1400px;
+            width: 98%;
+            border-radius: 16px;
+            box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.3);
         }
 
         h1 {
-            font-size: 36px;
+            font-size: 48px;
             color: #ff79c6;
         }
 
         .score {
-            font-size: 48px;
+            font-size: 64px;
             font-weight: bold;
             color: #50fa7b;
         }
 
         .chart-container {
-            margin-top: 20px;
-            overflow-x: auto;
-            white-space: nowrap;
-            width: 100%;
+            margin-top: 30px;
             background: #44475a;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 20px;
+            border-radius: 12px;
+            overflow: hidden;
         }
 
         .chart-container img {
-            min-width: 1400px;
+            width: 100%;
             max-width: 100%;
-            width: auto;
+            height: auto;
             border-radius: 8px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.4);
         }
 
         .btn {
             display: inline-block;
-            padding: 12px 24px;
-            margin-top: 20px;
-            font-size: 18px;
+            padding: 16px 32px;
+            margin-top: 30px;
+            font-size: 20px;
             font-weight: bold;
             color: #ffffff;
             background: #6272a4;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             transition: background 0.3s;
             text-decoration: none;
@@ -95,78 +101,10 @@
         .btn:hover {
             background: #ff79c6;
         }
-
-        /* Settings Button (Fixed in Bottom-Right Corner) */
-        #settings-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: linear-gradient(90deg, #ff6b81, #ff4757);
-            border: none;
-            color: white;
-            font-size: 22px;
-            padding: 12px 16px;
-            cursor: pointer;
-            border-radius: 50%;
-            transition: background 0.3s ease, transform 0.2s;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        #settings-btn:hover {
-            background: linear-gradient(90deg, #ff4757, #ff6b81);
-            transform: scale(1.1);
-        }
-
-        /* Settings Menu */
-        #settings-menu {
-            position: fixed;
-            bottom: -300px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 400px;
-            background: var(--menu-bg);
-            color: var(--text-color);
-            padding: 20px;
-            border-radius: 15px 15px 0 0;
-            box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.2);
-            transition: bottom 0.3s ease-in-out;
-        }
-
-        #settings-menu.open {
-            bottom: 0;
-        }
-
-        .settings-option {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .gradient-selector {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .gradient-btn {
-            width: 40px;
-            height: 40px;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        /* Hide page content until settings are applied */
-        .hidden {
-            visibility: hidden;
-        }
-
     </style>
 </head>
-<body onload="applySettings()">
-
-    <div class="container hidden" id="game-over-container">
+<body>
+    <div class="container">
         <h1>Game Over</h1>
         <p>You got <span class="score">{{ score }}</span> correct in a row!</p>
 
@@ -181,48 +119,5 @@
 
         <a href="/" class="btn">Play Again</a>
     </div>
-
-    <!-- Settings Button -->
-    <button id="settings-btn" onclick="toggleSettings()">⚙️</button>
-
-    <!-- Settings Menu -->
-    <div id="settings-menu">
-        <h2>Settings</h2>
-
-        <div class="settings-option">
-            <label>Gradient</label>
-            <div class="gradient-selector">
-                <button class="gradient-btn" style="background: linear-gradient(90deg, #2c0735, #9b30a8);" onclick="updateSetting('purple')"></button>
-                <button class="gradient-btn" style="background: linear-gradient(90deg, #d32f2f, #9a1b1b);" onclick="updateSetting('red')"></button>
-                <button class="gradient-btn" style="background: linear-gradient(90deg, #004a80, #006bb3);" onclick="updateSetting('blue')"></button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function toggleSettings() { 
-            document.getElementById('settings-menu').classList.toggle('open');
-        }
-
-        function updateSetting(gradient) {
-            let gradientColors = {
-                purple: ['#2c0735', '#6a0dad', '#9b30a8'],
-                red: ['#d32f2f', '#9a1b1b', '#c2185b'],
-                blue: ['#004a80', '#006bb3', '#003d73']
-            };
-
-            let [gradient1, gradient2, gradient3] = gradientColors[gradient];
-
-            // Update the CSS variables dynamically
-            document.documentElement.style.setProperty('--gradient-1', gradient1);
-            document.documentElement.style.setProperty('--gradient-2', gradient2);
-            document.documentElement.style.setProperty('--gradient-3', gradient3);
-        }
-
-        function applySettings() {
-            document.getElementById('game-over-container').classList.remove('hidden');
-        }
-    </script>
-
 </body>
 </html>
